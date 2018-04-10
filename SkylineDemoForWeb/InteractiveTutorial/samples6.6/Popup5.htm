@@ -1,0 +1,24 @@
+<html>
+    <head>
+        <title>Popup5</title>
+        <object id="SGWorld" classid="CLSID:3a4f9199-65a8-11d5-85c1-0001023952c1" style="visibility:hidden;height:0 "></object>
+        <script type="text/javascript">
+        
+        function Init()
+        {
+            var popup = SGWorld.Creator.CreatePopupMessage("Article", "http://www.yahoo.com",5,5);
+
+            popup.Width = SGWorld.Window.Rect.Width-10;
+            popup.Height = SGWorld.Window.Rect.Height-10;
+
+            SGWorld.Window.ShowPopup(popup);
+        }
+        
+        </script>
+    </head>
+    <body onload="Init();">
+    </body>
+</html>
+
+
+<!--Sig:000000408j7Hqzqg682KfbiATmTxrp0LDm4csafUT6pi.#XFXxYNCZQaLEumtIYBjVdD5EF1XvBW5Vhc1YxVKATauyU0JSJJ-->

@@ -1,0 +1,229 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Skyline JS EX</title>
+    <meta charset="UTF-8"/>
+    <script type="text/javascript">
+        /**
+         *
+         *初始化页面，加载工程，监听工程加载完毕事件
+         *
+         */
+        function Init() {
+            try {
+                //fly文件路径
+                var flyPath = "D:\\Backups\\skyline\\test.FLY";
+                SGWorld701.Project.Open(flyPath);
+                //添加onloadFinished事件
+                SGWorld701.AttachEvent("OnLoadFinished", OnProjectLoadFinished);
+                SGWorld701.AttachEvent("OnLButtonClicked", OnLButtonClicked);
+                //SGWorld701.AttachEvent("OnFrame", OnFrame);
+                //SGWorld701.AttachEvent("OnSGWorld701Message", OnSGWorld701Message);
+                //tintcolor = SGWorld701.Creator.CreateColor(0, 255, 0, 125);
+                //打开工程
+
+
+            }
+            catch (e) {
+                alert("Error: " + e.description);
+            }
+        }
+
+        /**
+         *
+         *onloadFinished事件方法
+         *
+         */
+        function OnProjectLoadFinished() {
+//            var pos = SGWorld701.Creator.CreatePosition(121.25, 31.10, 0.3, 0, 0, -90, 0, 100000);
+//            //使用导航飞到创建的位置
+//            SGWorld701.Navigate.FlyTo(pos);
+            GetFeatureAll();
+        }
+
+        /**
+         *
+         *鼠标移动事件
+         *
+         */
+        function OnMouseMoved() {
+            //获取相机当前位置信息
+            var current = SGWorld701.Navigate.GetPosition();
+            //在消息栏显示出相机相关信息
+            SGWorld701.Window.ShowMessageBarText("X:" + current.X + "  Y:" + current.Y + "  Z:" + current.Altitude + "Yaw:" + current.Yaw);
+        }
+
+        function flyto() {
+            var pos = SGWorld701.Creator.CreatePosition(121.42737, 31.18218, 0.3, 0, 0, -45, 0, 500);
+            //使用导航飞到创建的位置
+            SGWorld701.Navigate.FlyTo(pos);
+        }
+
+        var lastLD = null;
+        var lastCto = null;
+
+        function OnLButtonClicked(flag, x, y) {
+            //清楚高亮
+            if (lastCto) {
+                lastCto.Tint.abgrColor = 0x00000000;
+            }
+            //var ret = SGWorld701.Window.PixelToWorld(x, y);
+            var mouseInfo = SGWorld701.Window.GetMouseInfo();
+            //将平面坐标转换为球面坐标  
+            var worldPst = SGWorld701.Window.PixelToWorld(mouseInfo.x, mouseInfo.y, -1);
+            var type = worldPst.Type;
+            var focusID = worldPst.ObjectID;
+            if (toolModel == 1) {//获取坐标
+                alert(worldPst.Position.x + "," + worldPst.Position.y);
+                //toolModel = 0;
+
+            }
+            if (focusID != "") {
+
+                var cto = SGWorld701.Creator.GetObject(focusID);
+
+                if (toolModel == 3) {
+                    cto.Tint.abgrColor = 0x330000ff;
+                    lastCto = cto;
+                }
+
+                var str = "";
+                str += '<table border=1><tbody>';
+                var count = cto.FeatureAttributes.Count;
+                if (count != 0) {
+                    for (var i = 0; i < count; i++) {
+                        alert(cto.FeatureAttributes.Item(i).Value.toString());
+                        str += '<tr>';
+                        str += '<th>' + cto.FeatureAttributes.Item(i).Name.toString() + ":" + '</th>';
+                        str += '<td>' + cto.FeatureAttributes.Item(i).Value.toString() + '</td>';
+                        str += '</tr>';
+                    }
+                    str += '</tbody></table>';
+                }
+                if (toolModel == 2) {
+                    cto.Tint.abgrColor = 0x330000ff;
+                    lastCto = cto;
+                    //cto.Show = false;
+                    //SGWorld701.ProjectTree.SetVisibility(focusID,false);
+                    //alert(focusID);
+                    //alert(cto.FeatureAttributes.Item(0).Value+","+cto.id);
+                }
+                //var root = SGWorld701.ProjectTree.GetNextItem("", 18);
+                //var root1 = SGWorld701.ProjectTree.GetNextItem(root, 18);
+                //alert(root1);
+                //SGWorld701.ProjectTree.SetVisibility(root1, false);
+            }
+            toolModel = 0;
+        }
+
+        function onunload() {
+            if (lastLD != null) {
+                try {
+                    lastLD.Show = 1;
+                } catch (e) {
+                }
+            }
+            //SGWorld701.DetachEvent("OnFrame", OnFrame);
+            SGWorld701.DetachEvent("OnSGWorld701Message", OnSGWorld701Message);
+            SGWorld701.DetachEvent("OnLButtonClicked", OnLButtonClicked);
+        }
+
+        var toolModel = 0;
+
+        //或取点击坐标
+        function getpos() {
+            toolModel = 1;
+
+        }
+
+        //点击查询
+        function search() {
+            toolModel = 2;
+
+        }
+
+        //或取点击坐标
+        function highlight() {
+            toolModel = 3;
+
+        }
+
+        function GetFeatureAll() {
+            var strResult = "<table>";
+            var SGWorld = SGWorld701;
+            var ItemID = SGWorld.ProjectTree.FindItem(SGWorld.ProjectTree.RootID);
+            //alert(ItemID);
+            var obj = SGWorld.ProjectTree.GetLayer(ItemID);
+            //alert(obj);
+            // 遍历当前图层中已经在地图上加载的全部对象及其属性
+            var pIFeatureGroup = obj.FeatureGroups(0);
+            for (var i = 0; i < pIFeatureGroup.Count; i++) {
+                strResult = strResult + "<tr>";
+                var pIFeature = pIFeatureGroup.Item(i);
+                for (var j = 0; j < pIFeature.FeatureAttributes.Count; j++) {
+                    var pIFeatureAttribute = pIFeature.FeatureAttributes.Item(j);
+                    strResult = strResult + "<td>" + pIFeatureAttribute.Name + "*" + pIFeatureAttribute.Value + "</td>";
+                }
+                strResult = strResult + "</tr>";
+            }
+            strResult = strResult + "</table>";
+            //alert(strResult);
+            window.document.getElementById("result").innerHTML = strResult;
+        }
+
+        function layerCon() {
+            //var itemid = SGWorld701.ProjectTree.FindItem("aaa\\huading");
+            var itemid = SGWorld701.ProjectTree.FindItem("123\\CenterOffset_ba");
+            //var textLayer  = SGWorld701.ProjectTree.GetObject(itemid);
+            var textLayer = SGWorld701.ProjectTree.GetLayer(itemid);
+            var textGroups = textLayer.FeatureGroups;
+            var textGroup = textGroups.Item(0);
+            //alert(textGroups.Count);
+            var textFeatures = textGroup.Features;
+            // alert(textFeatures.Count);
+            // SGWorld701.ProjectTree.SetVisibility(itemid,false);
+            // alert(2);
+            for (var i = 0; i < textFeatures.Count; i++) {
+                var objFeature = textFeatures.Item(i);
+                objFeature.Show = false;
+                //objFeature.id 这个可以取到
+                // objFeature.Tint.SetAlpha(0.9);
+
+            }
+
+            //var cto = SGWorld701.Creator.GetObject("0_1753");
+            //var obj = SGWorld701.ProjectTree.GetObject("0_1753")
+            //obj.Show = false;
+            //SGWorld701.ProjectTree.SetVisibility(obj,false);
+            //alert(cto.ObjectType);
+            //SGWorld701.ProjectTree.SetVisibility(cto , false);
+        }
+    </script>
+</head>
+<body onload="Init()">
+<div style="width:200px;float: left;" id="result"></div>
+<div style="float: left;width:800px;">
+    <input value="flyto" type="button" onclick="flyto()"/>
+    <input value="search" type="button" onclick="search()"/>
+    <input value="highlight" type="button" onclick="highlight()"/>
+    <input value="getPos" type="button" onclick="getpos()"/>
+    <!--<input value="" type="text"/>
+    <select name="sel_layer" id="sel_layer">
+        <option value="0">显示</option>
+        <option value="1">隐藏</option>
+    </select>
+    <input value="ttt" type="button" onclick="layerCon()"/>-->
+    <!--定义一个TerraExplorer 3D窗口对象
+    SGWorld66: 3A4F9199-65A8-11D5-85C1-0001023952C1
+    TE:        3a4f9192-65a8-11d5-85c1-0001023952c1
+    SGWorld701  3a4f9197-65a8-11d5-85c1-0001023952c1
+    7:3A4F919C-65A8-11D5-85C1-0001023952C1
+    -->
+    <object id="TE" classid="clsid:3a4f9192-65a8-11d5-85c1-0001023952c1" onmousemove="OnMouseMoved()"
+            style="width: 100%;height: 100%">
+    </object>
+    <!--定义TerraExplorer对象SGWorld701-->
+    <object id="SGWorld701" classid="CLSID:3A4F919C-65A8-11D5-85C1-0001023952C1"
+            style="visibility: hidden;height: 0"></object>
+</div>
+</body>
+</html>
